@@ -7,8 +7,21 @@ import { join } from "node:path";
 import { ANALYSIS_SCHEMA, SYSTEM_PROMPT, analysisSystem, validateAnalysis } from "../js/claude.js";
 import { LABELS } from "./prompts-en.mjs";
 
-const MODELS = new Set(["claude-opus-5", "claude-sonnet-5"]);
-const EFFORTS = new Set(["low", "medium", "high"]);
+export const MODELE_PAR_DEFAUT = "claude-opus-5";
+export const MODELS = new Set([MODELE_PAR_DEFAUT, "claude-sonnet-5"]);
+
+/** CLAUDE_MODE : "cli" (Claude Code et ton abonnement, par défaut) ou "api" (clé facturée à l'usage). */
+export function modeClaude(env = process.env) {
+  const m = (env.CLAUDE_MODE || "cli").trim().toLowerCase();
+  if (m !== "cli" && m !== "api") throw new Error(`CLAUDE_MODE doit valoir "cli" ou "api" (reçu : "${m}").`);
+  return m;
+}
+/** Sans la clé API : sinon Claude Code la prendrait, et l'abonnement ne servirait pas. */
+export function claudeEnv(env = process.env) {
+  const { ANTHROPIC_API_KEY, ...reste } = env;
+  return reste;
+}
+export const EFFORTS = new Set(["low", "medium", "high"]);
 export const CLAUDE_LOGIN_ERROR =
   "Claude n'est pas connecté sur l'ordinateur. Lance « claude auth login » dans un terminal, puis réessaie.";
 
@@ -19,7 +32,7 @@ export function buildClaudeArgs(model, { system = SYSTEM_PROMPT, systemFile = nu
     "--input-format", "stream-json",
     "--output-format", "stream-json",
     "--verbose",
-    "--model", MODELS.has(model) ? model : "claude-opus-5",
+    "--model", MODELS.has(model) ? model : MODELE_PAR_DEFAUT,
     "--effort", EFFORTS.has(effort) ? effort : "low",
     "--tools", "",
     "--strict-mcp-config",
@@ -113,7 +126,7 @@ export function runClaudeTask({ content, system, schema = null, model, effort = 
     }
     let child;
     try {
-      child = spawn(command, buildClaudeArgs(model, { system, systemFile, schema, effort, partial: Boolean(onText) }), { shell: false, windowsHide: true });
+      child = spawn(command, buildClaudeArgs(model, { system, systemFile, schema, effort, partial: Boolean(onText) }), { shell: false, windowsHide: true, env: claudeEnv() });
     } catch {
       finish({ ok: false, erreur: "Claude Code est introuvable sur l'ordinateur." });
       return;

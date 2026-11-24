@@ -12,9 +12,10 @@
     "start": "node --env-file=.env.local server.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.13.0",
     "@elevenlabs/elevenlabs-js": "^2.79.0",
+    "@napi-rs/canvas": "^1.2.0",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^6.5.438",
-    "@napi-rs/canvas": "^1.2.0"
+    "pdfjs-dist": "^6.5.438"
   }
 }

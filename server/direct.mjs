@@ -4,18 +4,18 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildClaudeArgs, buildUserMessage, parseClaudeOutput, textDeltaOf } from "./claude-cli.mjs";
+import { claudeEnv, buildClaudeArgs, buildUserMessage, parseClaudeOutput, textDeltaOf } from "./claude-cli.mjs";
 import { LABELS } from "./prompts-en.mjs";
 
-const MODELE = "claude-sonnet-5"; // le plus rapide qui reste fiable sur les règles
-const PERDU = "La conversation a été coupée. Touche le rond pour recommencer.";
+export const MODELE_DIRECT = "claude-sonnet-5"; // le plus rapide qui reste fiable sur les règles
+export const PERDU = "La conversation a été coupée. Touche le rond pour recommencer.";
 
 /** Ouvre Claude et lui fait lire les consignes. Rend { pret, demander, couper, fermer, occupe }. */
 export function ouvrirConversation({ system, contexte, langue = "fr", lancer = spawn, delaiMs = 60_000, onFermee = () => {} }) {
   const dossier = mkdtempSync(join(tmpdir(), "narrateur-direct-"));
   const consignes = join(dossier, "consignes.txt");
   writeFileSync(consignes, system, "utf8");
-  const enfant = lancer("claude", buildClaudeArgs(MODELE, { systemFile: consignes, schema: null, effort: "low", partial: true }), { shell: false, windowsHide: true });
+  const enfant = lancer("claude", buildClaudeArgs(MODELE_DIRECT, { systemFile: consignes, schema: null, effort: "low", partial: true }), { shell: false, windowsHide: true, env: claudeEnv() });
   let tampon = "", tour = null, ferme = false, suite = Promise.resolve(), numero = 0, coupureEntendue = null;
 
   function finir(r) {

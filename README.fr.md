@@ -4,7 +4,7 @@
 
 Prends en photo une carte, une règle ou un passage d'histoire d'un jeu. L'app le traduit (en français ou en anglais, au choix dans les réglages) et le lit à voix haute, avec une voix différente pour chaque personnage.
 
-L'app tourne sur ton ordinateur et tu l'ouvres sur l'iPhone par Tailscale. La traduction passe par ton abonnement Claude (`claude -p`) et les voix par ElevenLabs (modèle v4, voix francophones natives ; voix « premade » en secours).
+L'app tourne sur ton ordinateur et tu l'ouvres sur l'iPhone par Tailscale. La traduction passe par ton abonnement Claude (`claude -p`) ou par l'API Anthropic et les voix par ElevenLabs (modèle v4, voix francophones natives ; voix « premade » en secours).
 
 ## Ce que fait l'app
 
@@ -33,6 +33,17 @@ Toutes les données sont dans `data/` sur l'ordinateur (`data/jeux/` pour les pr
    ```
    La commande affiche l'adresse à ouvrir sur l'iPhone, du genre `https://<ton-ordinateur>.<ton-tailnet>.ts.net`.
 4. Sur l'iPhone, ouvre cette adresse dans Safari, puis Partager → « Sur l'écran d'accueil ».
+
+## Utiliser une clé API Claude
+
+Par défaut, l'app passe par Claude Code et ton abonnement. Pour utiliser l'API Anthropic (facturée à l'usage), mets dans `.env.local` :
+
+```
+CLAUDE_MODE=api
+ANTHROPIC_API_KEY=ta-cle
+```
+
+Une clé seule ne change rien : il faut aussi `CLAUDE_MODE=api`. Redémarre ensuite le serveur. `claude auth login` n'est alors pas nécessaire. Le livret est gardé en cache pour que les questions suivantes coûtent moins cher.
 
 ## Démarrage automatique
 

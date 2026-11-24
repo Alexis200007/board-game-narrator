@@ -6,7 +6,7 @@ Take a photo of a card, rule or story passage from a board game. The app transla
 
 The interface, translations and voices are available in **English** and **French** (Settings → Language). Cards can be in any language.
 
-It is a web app made for the phone. It runs on your own computer: [Claude Code](https://claude.com/claude-code) (`claude -p`, your own Claude plan) reads and translates, and [ElevenLabs](https://elevenlabs.io) provides the voices.
+It is a web app made for the phone. It runs on your own computer: Claude reads and translates, through [Claude Code](https://claude.com/claude-code) (your Claude plan) or the Anthropic API (your key), and [ElevenLabs](https://elevenlabs.io) provides the voices.
 
 ## Features
 
@@ -20,7 +20,9 @@ It is a web app made for the phone. It runs on your own computer: [Claude Code](
 ## Requirements
 
 - Node.js 22 or newer
-- [Claude Code](https://claude.com/claude-code), signed in (`claude auth login`)
+- Claude, either way:
+  - [Claude Code](https://claude.com/claude-code), signed in (`claude auth login`), the default
+  - or an [Anthropic API key](https://platform.claude.com)
 - An ElevenLabs API key. The French default voices come from the voice library and need a paid plan; the English ones are premade voices.
 - [Tailscale](https://tailscale.com) (or another private HTTPS route) to open the app on a phone. The microphone needs HTTPS.
 
@@ -30,7 +32,16 @@ It is a web app made for the phone. It runs on your own computer: [Claude Code](
 npm install
 ```
 
-Copy `.env.example` to `.env.local` and put your ElevenLabs key in it. Then:
+Copy `.env.example` to `.env.local` and put your ElevenLabs key in it. To use the Anthropic API instead of Claude Code, also set:
+
+```
+CLAUDE_MODE=api
+ANTHROPIC_API_KEY=your-key
+```
+
+A key alone changes nothing: the API is used only with `CLAUDE_MODE=api`. Restart the server after a change. API use is billed per token; the rulebook is prompt-cached to make follow-up questions cheaper.
+
+Then:
 
 ```
 npm start
@@ -48,8 +59,8 @@ On Windows, `scripts\installer-demarrage.ps1` installs a scheduled task that sta
 
 ## Security and costs
 
-- The server has **no login** and spends your Claude and ElevenLabs quota. It listens on `127.0.0.1` only. Don't expose it to the Internet (no Tailscale Funnel, no port forwarding).
-- The ElevenLabs key stays on the computer. For voice chat, the phone gets single-use tokens only.
+- The server has **no login** and spends your Claude and ElevenLabs quota (or API credit). It listens on `127.0.0.1` only. Don't expose it to the Internet (no Tailscale Funnel, no port forwarding).
+- API keys stay on the computer. For voice chat, the phone gets single-use tokens only.
 - Games, photos of rulebook pages, PDFs and cached audio are stored in `data/` and are never committed. Rulebooks are copyrighted: add your own.
 
 ## Development

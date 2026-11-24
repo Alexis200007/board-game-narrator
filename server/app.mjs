@@ -79,7 +79,7 @@ function gameView(g, images = new Set(), langue = "fr") {
 const findGroupe = (g, id) => g.groupes.find((x) => x.id === id) || g.groupes[0];
 const findPartie = (groupe, id) => groupe.parties.find((p) => p.id === id) || groupe.parties.at(-1);
 
-export function createHandler({ root, runClaude, runTask, tts = null, store = null, audioCache = null, conversations = createConversations(), images = null, maxBytes = 8 * 1024 * 1024 }) {
+export function createHandler({ root, runClaude, runTask, tts = null, store = null, audioCache = null, conversations = createConversations(), images = null, claude = "cli", maxBytes = 8 * 1024 * 1024 }) {
   let queue = Promise.resolve(); // une seule tâche Claude à la fois
   const travaux = new Map(); // lectures de livrets PDF en cours : id → { id, jeu, titre, total, faites, etat, erreur }
 
@@ -513,6 +513,7 @@ ${question}`;
       const envoyer = (obj) => res.write(JSON.stringify(obj) + "\n");
       if (flux) res.writeHead(200, { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store", "X-Accel-Buffering": "no" });
       const r = await enqueue(() => runTask({
+        prefixe: texte.indexOf(`\n\n${L.glossaire} :`), // le livret, réutilisable d'une question à l'autre (mode API)
         content: [{ type: "text", text: texte }], system: rulesQuestionSystem({ vocal: p.vocal === true, langue }), model: p.modele || "claude-opus-5", effort: p.vocal === true ? "low" : "medium",
         onText: flux ? createFiltreReferences((morceau) => envoyer({ morceau })) : null,
       }));
@@ -573,7 +574,7 @@ ${question}`;
       if (url.pathname === "/api/voix" && req.method === "GET") return await voix(res);
       if (parts[0] === "api" && parts[1] === "ambiance" && req.method === "GET") return await ambiance(res, parts[2]);
       if (parts[0] === "api" && parts[1] === "jeux") return await jeux(req, res, parts.slice(2));
-      if (url.pathname === "/api/etat" && req.method === "GET") return sendJson(res, 200, { eleven: Boolean(tts) });
+      if (url.pathname === "/api/etat" && req.method === "GET") return sendJson(res, 200, { eleven: Boolean(tts), claude });
       if (req.method === "GET") return await fichier(res, url.pathname);
       res.writeHead(405).end();
     } catch (err) {
