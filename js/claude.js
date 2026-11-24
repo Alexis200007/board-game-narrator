@@ -132,7 +132,7 @@ export async function analyzeImage(jpegBlob, model, { jeu = "", groupe = "", par
   try {
     res = await fetch(`api/analyser?modele=${encodeURIComponent(model)}&jeu=${encodeURIComponent(jeu)}&groupe=${encodeURIComponent(groupe)}&partie=${encodeURIComponent(partie)}`, { method: "POST", body: jpegBlob, headers: enTeteLangue });
   } catch {
-    throw new Error(t("Impossible de joindre l'ordinateur. Vérifie que Tailscale est actif et que le serveur tourne."));
+    throw new Error(t("Impossible de joindre le serveur. Vérifie ta connexion (et Tailscale, si tu l'utilises)."));
   }
   const body = await res.json().catch(() => null);
   if (!res.ok || !body?.ok) throw new Error(tErreur(body?.erreur || `Erreur du serveur (${res.status}).`));

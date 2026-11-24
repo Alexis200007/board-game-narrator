@@ -1,0 +1,12 @@
+*
+!package.json
+!package-lock.json
+!index.html
+!connexion.html
+!styles.css
+!manifest.webmanifest
+!icon.svg
+!icon-180.png
+!server.mjs
+!js
+!server

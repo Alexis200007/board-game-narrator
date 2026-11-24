@@ -1,7 +1,7 @@
 // Appels au serveur du PC. Toutes les erreurs remontent avec un message en français.
 import { t, tErreur, enTeteLangue } from "./i18n.js";
 
-const UNREACHABLE = "Impossible de joindre l'ordinateur. Vérifie que Tailscale est actif et que le serveur tourne.";
+const UNREACHABLE = "Impossible de joindre le serveur. Vérifie ta connexion (et Tailscale, si tu l'utilises).";
 
 export async function api(path, { method = "GET", json, body, headers } = {}) {
   let res;

@@ -61,7 +61,11 @@ L'ordinateur doit rester allumé et ne pas se mettre en veille pendant la partie
 
 ## Sécurité
 
-Le serveur n'a pas de connexion par mot de passe et utilise tes forfaits Claude et ElevenLabs. Ne l'expose pas sur Internet (pas de Tailscale Funnel).
+À la maison, le serveur n'a pas de mot de passe et utilise tes forfaits Claude et ElevenLabs. Ne l'expose pas sur Internet (pas de Tailscale Funnel) sans `APP_PASSWORD`.
+
+## Installer sur un serveur
+
+Sans Tailscale ni ordinateur à la maison : Docker, un nom de domaine et un mot de passe commun. Voir [docs/DEPLOY.md](docs/DEPLOY.md#en-français).
 
 ## Tests
 

@@ -1,3 +1,4 @@
+import { preparerDeconnexion } from "./acces.js";
 import { loadSettings, saveSettings } from "./settings.js";
 import { t, tErreur, langue, enTeteLangue, traduirePage } from "./i18n.js";
 import { createCaster, defaultRoles, fallbackVoiceFor, castVoiceOptions } from "./voices.js";
@@ -53,7 +54,7 @@ const player = createPlayer(audio, {
     li.classList.remove("chargement", "lecture", "fini", "erreur");
     li.classList.add(state);
     if (state === "lecture") li.scrollIntoView({ behavior: "smooth", block: "center" });
-    if (state === "erreur" && err) showError(t("{erreur}. Le texte reste affiché.", { erreur: err.message }), false);
+    if (state === "erreur" && err) showError(t("{erreur}. Le texte reste affiché.", { erreur: err.message.replace(/.$/, "") }), false);
   },
 });
 
@@ -421,7 +422,7 @@ async function refreshVoices() {
   } catch (err) {
     voiceList = [];
     fillVoiceSelects();
-    $("voices-status").textContent = t("{erreur}. Les voix françaises par défaut restent disponibles.", { erreur: err.message });
+    $("voices-status").textContent = t("{erreur}. Les voix françaises par défaut restent disponibles.", { erreur: err.message.replace(/.$/, "") });
   }
 }
 
@@ -584,6 +585,7 @@ function updateHome() {
 // Choix du jeu : la dernière liste connue s'affiche tout de suite, puis se met à jour.
 for (const id of ["jeux-dialog", "groupes-dialog", "demande"]) fenetreDouce($(id));
 preparerVuePage();
+preparerDeconnexion($("btn-deconnexion"));
 $("jeux-dialog").querySelector("form").addEventListener("submit", (e) => { e.preventDefault(); fermer($("jeux-dialog")); });
 let derniersJeux = null;
 function openGamePicker() {
@@ -1497,7 +1499,7 @@ async function poserQuestion(d, question) {
       clearInterval(veiller);
       const msg = d.voix.erreur?.message;
       finReponse(d);
-      if (msg) $("vocal-aide").textContent = t("{erreur}. La réponse reste écrite.", { erreur: msg });
+      if (msg) $("vocal-aide").textContent = t("{erreur}. La réponse reste écrite.", { erreur: msg.replace(/.$/, "") });
     }
   }, 200);
 }

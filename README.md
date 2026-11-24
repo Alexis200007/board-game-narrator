@@ -6,7 +6,7 @@ Take a photo of a card, rule or story passage from a board game. The app transla
 
 The interface, translations and voices are available in **English** and **French** (Settings → Language). Cards can be in any language.
 
-It is a web app made for the phone. It runs on your own computer: Claude reads and translates, through [Claude Code](https://claude.com/claude-code) (your Claude plan) or the Anthropic API (your key), and [ElevenLabs](https://elevenlabs.io) provides the voices.
+It is a web app made for the phone. It runs on your own computer or [server](docs/DEPLOY.md): Claude reads and translates, through [Claude Code](https://claude.com/claude-code) (your Claude plan) or the Anthropic API (your key), and [ElevenLabs](https://elevenlabs.io) provides the voices.
 
 ## Features
 
@@ -24,7 +24,7 @@ It is a web app made for the phone. It runs on your own computer: Claude reads a
   - [Claude Code](https://claude.com/claude-code), signed in (`claude auth login`), the default
   - or an [Anthropic API key](https://platform.claude.com)
 - An ElevenLabs API key. The French default voices come from the voice library and need a paid plan; the English ones are premade voices.
-- [Tailscale](https://tailscale.com) (or another private HTTPS route) to open the app on a phone. The microphone needs HTTPS.
+- For the home setup, [Tailscale](https://tailscale.com) (or another private HTTPS route) to open the app on a phone. The microphone needs HTTPS.
 
 ## Setup
 
@@ -57,10 +57,15 @@ Open the address it prints in Safari or Chrome, then add it to the home screen.
 
 On Windows, `scripts\installer-demarrage.ps1` installs a scheduled task that starts the server when you sign in.
 
+### Or deploy on a server
+
+No Tailscale or home computer needed: with Docker, a domain name and a shared password, see **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
 ## Security and costs
 
-- The server has **no login** and spends your Claude and ElevenLabs quota (or API credit). It listens on `127.0.0.1` only. Don't expose it to the Internet (no Tailscale Funnel, no port forwarding).
-- API keys stay on the computer. For voice chat, the phone gets single-use tokens only.
+- In the home setup above, the server has **no login**: it listens on `127.0.0.1` only. Don't expose it to the Internet (no Tailscale Funnel, no port forwarding) without `APP_PASSWORD`.
+- Everyone with access spends your Claude and ElevenLabs quota or API credit.
+- API keys stay on the server. For voice chat, the phone gets single-use tokens only.
 - Games, photos of rulebook pages, PDFs and cached audio are stored in `data/` and are never committed. Rulebooks are copyrighted: add your own.
 
 ## Development

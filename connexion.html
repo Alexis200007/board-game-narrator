@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Narrateur">
+  <meta name="theme-color" content="#1d3b33">
+  <title>Narrateur de jeux</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <style>
+    * { box-sizing: border-box; }
+    html { background: #1d3b33; color-scheme: light; -webkit-text-size-adjust: 100%; }
+    body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; font: 400 18px/1.4 "Atkinson Hyperlegible", system-ui, sans-serif; color: #23211d; }
+    form { width: min(100%, 380px); padding: 28px 22px 24px; border-radius: 6px; background: #efebe2; box-shadow: 5px 8px 0 #142a24; }
+    h1 { margin: 0 0 20px; font: 600 28px/1.2 Literata, Georgia, serif; }
+    label { display: block; margin-bottom: 6px; font-weight: 700; }
+    input { width: 100%; min-height: 50px; padding: 0 14px; border: 1px solid #a9a292; border-radius: 8px; background: #fbf9f4; color: inherit; font: inherit; }
+    button { width: 100%; min-height: 52px; margin-top: 16px; border: 0; border-radius: 10px; background: #1d3b33; color: #e6efe9; font: 700 18px system-ui, sans-serif; cursor: pointer; }
+    button:disabled { opacity: .55; }
+    p { margin: 12px 0 0; color: #b3412f; }
+    p:empty { display: none; }
+    :focus-visible { outline: 3px solid #f3dd6b; outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <form id="f">
+    <h1 id="titre">Narrateur de jeux</h1>
+    <label id="lib" for="m">Mot de passe</label>
+    <input id="m" type="password" autocomplete="current-password" required autofocus>
+    <p id="e" role="alert"></p>
+    <button id="b">Entrer</button>
+  </form>
+  <script>
+    const $ = (i) => document.getElementById(i);
+    let langue = null;
+    try { langue = JSON.parse(localStorage.getItem("narrateur-jeux:settings") || "null")?.langue; } catch { /* stockage bloqué */ }
+    const en = (langue || navigator.language || "").startsWith("en") || (!langue && !/^fr/i.test(navigator.language || ""));
+    const T = en
+      ? { titre: "Board Game Narrator", lib: "Password", b: "Enter", faux: "Wrong password.", trop: "Too many attempts. Try again in {n} min.", reseau: "Can't reach the server. Check your connection." }
+      : { titre: "Narrateur de jeux", lib: "Mot de passe", b: "Entrer", faux: "Mot de passe incorrect.", trop: "Trop d'essais. Réessaie dans {n} min.", reseau: "Impossible de joindre le serveur. Vérifie ta connexion." };
+    document.documentElement.lang = en ? "en" : "fr";
+    document.title = T.titre;
+    for (const k of ["titre", "lib", "b"]) $(k).textContent = T[k];
+    $("f").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      $("b").disabled = true;
+      $("e").textContent = "";
+      try {
+        const r = await fetch("api/connexion", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ motDePasse: $("m").value }) });
+        if (r.ok) return location.replace("./");
+        $("e").textContent = r.status === 429 ? T.trop.replace("{n}", Math.ceil((r.headers.get("Retry-After") || 900) / 60)) : r.status === 401 ? T.faux : T.reseau;
+        $("m").select();
+      } catch { $("e").textContent = T.reseau; }
+      $("b").disabled = false;
+    });
+  </script>
+</body>
+</html>

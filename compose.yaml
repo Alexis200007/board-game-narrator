@@ -1,0 +1,34 @@
+# See docs/DEPLOY.md. Only Caddy is reachable from outside; it gets the HTTPS certificate by itself.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    init: true
+    environment:
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:?set it in .env}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?set it in .env}
+      APP_PASSWORD: ${APP_PASSWORD:?set it in .env}
+      CLAUDE_MODE: api
+    volumes:
+      - data:/data
+    security_opt:
+      - no-new-privileges:true
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      DOMAIN: ${DOMAIN:?set it in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+volumes:
+  data:
+  caddy-data:
+  caddy-config:

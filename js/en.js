@@ -44,7 +44,7 @@ export const EN = {
   "Modèle Claude": "Claude model",
   "Opus 5, la meilleure traduction": "Opus 5, best translation",
   "Sonnet 5, plus rapide": "Sonnet 5, faster",
-  "La traduction passe par Claude sur ton ordinateur. Aucune clé n'est gardée sur ce téléphone. Les réglages s'enregistrent tout seuls.": "Translation runs through Claude on your computer. No key is kept on this phone. Settings save automatically.",
+  "La traduction passe par Claude, sur le serveur de l'app. Aucune clé n'est gardée sur ce téléphone. Les réglages s'enregistrent tout seuls.": "Translation runs through Claude, on the app's server. No key is kept on this phone. Settings save automatically.",
   "Préparé à partir du livret. En cas de doute, demande dans Règles ou vérifie le livret.": "Prepared from the rulebook. If in doubt, ask in Rules or check the rulebook.",
   "Historique": "History",
   "Ajuste le cadre autour du texte à lire.": "Adjust the frame around the text to read.",
@@ -196,9 +196,13 @@ export const EN = {
   "Impossible de lire cette photo. Essaie une autre photo.": "Can't read this photo. Try another one.",
   "Impossible de préparer la photo.": "Couldn't prepare the photo.",
   "La réponse a été coupée. Réessaie.": "The answer was cut off. Try again.",
-  "Impossible de joindre l'ordinateur. Vérifie que Tailscale est actif et que le serveur tourne.": "Can't reach the computer. Check that Tailscale is on and the server is running.",
+  "Impossible de joindre le serveur. Vérifie ta connexion (et Tailscale, si tu l'utilises).": "Can't reach the server. Check your connection (and Tailscale, if you use it).",
+
+  "Se déconnecter": "Sign out",
 
   // Server messages
+  "Origine refusée.": "Origin refused.",
+  "Connecte-toi d'abord.": "Sign in first.",
   "Aucun texte trouvé sur la photo. Réessaie de plus près.": "No text found in the photo. Try again closer up.",
   "Réponse inattendue de Claude. Réessaie.": "Unexpected answer from Claude. Try again.",
   "Quota ElevenLabs atteint": "ElevenLabs quota reached",
