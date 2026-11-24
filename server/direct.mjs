@@ -6,17 +6,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { claudeEnv, buildClaudeArgs, buildUserMessage, parseClaudeOutput, textDeltaOf } from "./claude-cli.mjs";
 import { LABELS } from "./prompts-en.mjs";
+import { coutResultat } from "./couts.mjs";
 
 export const MODELE_DIRECT = "claude-sonnet-5"; // le plus rapide qui reste fiable sur les règles
 export const PERDU = "La conversation a été coupée. Touche le rond pour recommencer.";
 
 /** Ouvre Claude et lui fait lire les consignes. Rend { pret, demander, couper, fermer, occupe }. */
-export function ouvrirConversation({ system, contexte, langue = "fr", lancer = spawn, delaiMs = 60_000, onFermee = () => {} }) {
+export function ouvrirConversation({ system, contexte, langue = "fr", lancer = spawn, delaiMs = 60_000, onFermee = () => {}, onCout = () => {} }) {
   const dossier = mkdtempSync(join(tmpdir(), "narrateur-direct-"));
   const consignes = join(dossier, "consignes.txt");
   writeFileSync(consignes, system, "utf8");
   const enfant = lancer("claude", buildClaudeArgs(MODELE_DIRECT, { systemFile: consignes, schema: null, effort: "low", partial: true }), { shell: false, windowsHide: true, env: claudeEnv() });
-  let tampon = "", tour = null, ferme = false, suite = Promise.resolve(), numero = 0, coupureEntendue = null;
+  let tampon = "", tour = null, ferme = false, suite = Promise.resolve(), numero = 0, coupureEntendue = null, coutTotal = 0;
 
   function finir(r) {
     const t = tour;
@@ -45,6 +46,8 @@ export function ouvrirConversation({ system, contexte, langue = "fr", lancer = s
       else if (/"type":"result"/.test(l)) {
         let m = null;
         try { m = JSON.parse(l); } catch { /* ligne coupée */ }
+        const cout = coutResultat(l); // total depuis le début de la conversation
+        if (cout !== null && cout > coutTotal) { onCout(cout - coutTotal); coutTotal = cout; }
         if (m?.type === "result") finir(parseClaudeOutput(l, "text"));
       }
     }
@@ -113,7 +116,7 @@ export function createConversations({ ouvrir = ouvrirConversation, inactiviteMs 
       const anciennes = [...ouvertes.values()];
       if (anciennes.length >= 2) anciennes[0].conv.fermer();
       const c = { id, jeu };
-      c.conv = ouvrir({ ...options, onFermee: () => { clearTimeout(c.minuteur); ouvertes.delete(id); } });
+      c.conv = ouvrir({ ...options, onFermee: () => { clearTimeout(c.minuteur); ouvertes.delete(id); options.onFermee?.(); } });
       ouvertes.set(id, c);
       toucher(c);
       return c.conv;

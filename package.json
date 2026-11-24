@@ -9,6 +9,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test \"tests/**/*.test.mjs\"",
+    "evaluer": "node --env-file-if-exists=.env.local scripts/evaluer.mjs",
     "start": "node --env-file=.env.local server.mjs"
   },
   "dependencies": {

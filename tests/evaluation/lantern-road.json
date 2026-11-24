@@ -1,0 +1,20 @@
+{
+  "jeu": {
+    "id": "lantern-road",
+    "nom": "The Lantern Road",
+    "glossaire": { "Courage": "Courage", "claw": "griffe" },
+    "livret": [
+      { "id": "p1", "source": "demo", "titre": "Rulebook, p. 1–4", "texte": "=== p. 1 ===\nSetup\nPlace the lantern, unlit, in the middle of the board. Each player takes one traveller card and six dice. The tallest player goes first.\n=== p. 2 ===\nYour turn\nOn your turn, follow these steps in order: 1. Move up to three spaces. You may not move diagonally. 2. Read the card on the space you reach. 3. Fight any creature in your space. 4. Pass the lantern to the player on your left.\nA player carrying the lantern may move only two spaces.\n=== p. 3 ===\nFighting in the dark\nRoll one die for each point of Courage on your card. Every 5 or 6 is a hit. A hit removes one claw from the creature. If the lantern is lit in your space, you may reroll one die, once per fight. When the last claw is removed, the creature is defeated and you draw one treasure. If any claws remain, you lose one Courage for each of them.\nTwo travellers in the same space may fight together. Add their dice. If they win, only the traveller whose turn it is draws the treasure.\n=== p. 4 ===\nEnd of the game\nThe travellers win together when the lit lantern reaches the old inn. They lose if every traveller is at zero Courage at the end of a round. A traveller at zero Courage cannot fight but may still move.\n" }
+    ]
+  },
+  "cas": [
+    { "langue": "fr", "question": "Combien de dés je lance dans un combat ?", "attendu": "Un dé par point de Courage sur ta carte.", "page": 3 },
+    { "langue": "fr", "question": "Si j'ai la lanterne, je peux bouger de combien de cases ?", "attendu": "Deux cases au plus, au lieu de trois.", "page": 2 },
+    { "langue": "fr", "question": "On est deux dans la même case et on gagne le combat : on pioche chacun un trésor ?", "attendu": "Non. Seul le voyageur dont c'est le tour pioche le trésor.", "page": 3 },
+    { "langue": "fr", "question": "À zéro Courage, est-ce que je suis éliminé ?", "attendu": "Non. Tu ne peux plus combattre, mais tu peux encore te déplacer.", "page": 4 },
+    { "langue": "fr", "question": "Combien de cartes peut-on garder en main ?", "attendu": "Le livret ne le dit pas. La réponse doit le dire clairement ; une interprétation est acceptée si elle est présentée comme telle." },
+    { "langue": "en", "question": "Can I move diagonally?", "attendu": "No.", "page": 2 },
+    { "langue": "en", "question": "Who goes first?", "attendu": "The tallest player.", "page": 1 },
+    { "langue": "en", "question": "How many dice can I reroll with the lantern lit?", "attendu": "One die, once per fight, if the lit lantern is in your space.", "page": 3 }
+  ]
+}

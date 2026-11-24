@@ -99,6 +99,17 @@ export function nettoyerAide(data) {
 
 export const MAX_LIVRET_CHARS = 400_000;
 
+/** Texte complet d'une question ; prefixe = longueur du début stable (le livret), réutilisable d'une question à l'autre. */
+export function texteQuestion({ jeu, glossaire = jeu.glossaire || {}, carte = "", echanges = "", question, langue = "fr" }) {
+  const L = LABELS[langue];
+  const debut = `${L.jeu} : ${jeu.nom}\n\n${L.livret} :\n${livretPourQuestion(jeu.livret, langue)}`;
+  const termes = Object.entries(glossaire).map(([en, fr]) => `- ${en} → ${fr}`).join("\n") || L.vide;
+  return {
+    prefixe: debut.length,
+    texte: `${debut}\n\n${L.glossaire} :\n${termes}\n\n${L.carte} :\n${carte || L.aucune}\n\n${L.echanges} :\n${echanges || L.aucun}\n\n${L.question} :\n${question}`,
+  };
+}
+
 /** Texte du livret à joindre à une question, tronqué proprement s'il est trop long. */
 export function livretPourQuestion(livret = [], langue = "fr") {
   if (!livret.length) return LABELS[langue].sansLivret;

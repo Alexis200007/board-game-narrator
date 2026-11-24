@@ -13,6 +13,8 @@ import { createAudioCache } from "./server/audio-cache.mjs";
 import { createImagesLivret } from "./server/images-livret.mjs";
 import { createElevenTts } from "./server/eleven.mjs";
 import { lireAcces, proteger } from "./server/acces.mjs";
+import { createCouts } from "./server/couts.mjs";
+import { createEvaluations } from "./server/evaluation.mjs";
 import { resolve } from "node:path";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -40,7 +42,9 @@ if (mode === "api") {
 
 let acces;
 try { acces = lireAcces(); } catch (err) { console.error(err.message); process.exit(1); }
-let handler = createHandler({ images, root, ...claude, claude: mode, connexion: Boolean(acces.motDePasse), tts, store, audioCache });
+const couts = createCouts(dataDir);
+const tarifVoix = Number(process.env.ELEVENLABS_USD_PER_1000_CHARS) || null;
+let handler = createHandler({ couts, tarifVoix, evaluations: createEvaluations(resolve(dataDir, "evaluations")), images, root, ...claude, claude: mode, connexion: Boolean(acces.motDePasse), tts, store, audioCache });
 if (acces.motDePasse) handler = proteger(handler, { ...acces, dossier: dataDir, page: fileURLToPath(new URL("./connexion.html", import.meta.url)) });
 const serveur = createServer((req, res) => {
   // Journal court : utile pour voir ce que l'iPhone demande vraiment.
@@ -55,6 +59,7 @@ const serveur = createServer((req, res) => {
 // Arrêt propre (Docker, hébergeur) : les réponses en cours ont quelques secondes pour finir.
 for (const signal of ["SIGTERM", "SIGINT"]) process.on(signal, () => {
   claude.conversations.fermerTout();
+  couts.vider();
   serveur.close(() => process.exit(0));
   setTimeout(() => process.exit(0), 8000).unref();
 });

@@ -7,7 +7,7 @@ import { errorMessageFor } from "../js/tts.js";
 import { AMBIANCES } from "../js/claude.js";
 import { newPartie, newGroupe } from "./store.mjs";
 import { audioKey } from "./audio-cache.mjs";
-import { RULES_EXTRACT_SYSTEM, rulesQuestionSystem, summarySystem, directSystem, livretPourQuestion, termesPourTranscription, aideSystem, AIDE_SCHEMA, versionLivret, nettoyerAide } from "./prompts.mjs";
+import { RULES_EXTRACT_SYSTEM, rulesQuestionSystem, summarySystem, directSystem, livretPourQuestion, texteQuestion, termesPourTranscription, aideSystem, AIDE_SCHEMA, versionLivret, nettoyerAide } from "./prompts.mjs";
 import { LABELS } from "./prompts-en.mjs";
 import { MODELE_VOIX, MODELE_RAPIDE } from "./eleven.mjs";
 import { createConversations } from "./direct.mjs";
@@ -79,7 +79,10 @@ function gameView(g, images = new Set(), langue = "fr") {
 const findGroupe = (g, id) => g.groupes.find((x) => x.id === id) || g.groupes[0];
 const findPartie = (groupe, id) => groupe.parties.find((p) => p.id === id) || groupe.parties.at(-1);
 
-export function createHandler({ root, runClaude, runTask, tts = null, store = null, audioCache = null, conversations = createConversations(), images = null, claude = "cli", connexion = false, maxBytes = 8 * 1024 * 1024 }) {
+export function createHandler({ root, runClaude, runTask, tts = null, store = null, audioCache = null, conversations = createConversations(), images = null, claude = "cli", connexion = false, couts = null, evaluations = null, tarifVoix = null, maxBytes = 8 * 1024 * 1024 }) {
+  const compte = (type) => (usd) => couts?.noter(type, { usd });
+  const compteVoix = (text) => couts?.noter("voix", { caracteres: text.length });
+  const ecoutes = new Map(); // conversation → début de l'écoute
   let queue = Promise.resolve(); // une seule tâche Claude à la fois
   const travaux = new Map(); // lectures de livrets PDF en cours : id → { id, jeu, titre, total, faites, etat, erreur }
 
@@ -90,6 +93,7 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
     try {
       const L = LABELS[langue], glossaire = listeGlossaire(jeu, langue);
       const r = await runTask({
+        onCout: compte("aide"),
         content: [{ type: "text", text: `${L.jeu} : ${jeu.nom}\n\n${L.livret} :\n${livretPourQuestion(jeu.livret, langue)}\n\n${L.glossaire} :\n${glossaire}\n\n${L.preparer}` }],
         system: aideSystem(langue), schema: AIDE_SCHEMA, expect: "json", model, effort: "medium", timeoutMs: 420_000,
       });
@@ -116,6 +120,7 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
       travail.faites = textChunks.reduce((n, c) => n + c.pages.length, 0);
       for (const lot of await ocrBatches(pdf, ocrPages)) {
         const r = await enqueue(() => runTask({
+          onCout: compte("livret"),
           content: [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: lot.pdf.toString("base64") } },
             { type: "text", text: "Recopie le texte de ces pages du livret, page par page, en commençant chaque page par === p. N === (N = numéro de page indiqué ici : " + lot.pages.join(", ") + ")." }],
           system: RULES_EXTRACT_SYSTEM,
@@ -152,7 +157,7 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
     const langue = langueDe(req);
     const jeuId = url.searchParams.get("jeu");
     const jeu = jeuId && store ? await store.getGame(jeuId) : null;
-    const r = await enqueue(() => runClaude(body.toString("base64"), model, jeu ? glossaireDe(jeu, langue) : {}, { langue }));
+    const r = await enqueue(() => runClaude(body.toString("base64"), model, jeu ? glossaireDe(jeu, langue) : {}, { langue, onCout: compte("carte") }));
     if (!r.ok) return sendJson(res, 502, { ok: false, erreur: r.erreur });
     if (jeu) {
       await store.update(jeu.id, (g) => {
@@ -182,6 +187,7 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
       const code = statusOf(err);
       return sendJson(res, 502, { erreur: errorMessageFor(code, String(err?.body ? JSON.stringify(err.body) : "")), code });
     }
+    compteVoix(text);
     await audioCache?.put(key, audio);
     sendAudio(res, audio);
   }
@@ -205,6 +211,7 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
         return sendJson(res, 502, { erreur: errorMessageFor(statusOf(e), e?.body ? JSON.stringify(e.body) : ""), code: statusOf(e) });
       }
     }
+    compteVoix(text);
     res.writeHead(200, { "Content-Type": "application/octet-stream", "Cache-Control": "no-store", "X-Accel-Buffering": "no" });
     try {
       for await (const bout of flux) {
@@ -225,6 +232,7 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
     if (cached) return sendAudio(res, cached);
     try {
       const buf = await tts.ambiance(nom);
+      couts?.noter("ambiance");
       await audioCache?.put(key, buf);
       sendAudio(res, buf);
     } catch (err) {
@@ -396,6 +404,7 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
       const titre = (url.searchParams.get("titre") || `Page ${jeu.livret.length + 1}`).slice(0, 80);
       const source = { type: "base64", media_type: isPdf ? "application/pdf" : "image/jpeg", data: body.toString("base64") };
       const r = await enqueue(() => runTask({
+        onCout: compte("livret"),
         content: [{ type: isPdf ? "document" : "image", source }, { type: "text", text: "Recopie le texte de cette page du livret." }],
         system: RULES_EXTRACT_SYSTEM,
         model: url.searchParams.get("modele") || "claude-opus-5",
@@ -428,6 +437,12 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
         const session = randomUUID();
         conversations.creer(session, id, {
           langue,
+          onCout: compte("vocal"),
+          onFermee: () => {
+            const debut = ecoutes.get(session);
+            ecoutes.delete(session);
+            if (debut) couts?.noter("ecoute", { secondes: Math.round((Date.now() - debut) / 1000) });
+          },
           system: directSystem({ ...jeu, glossaire: glossaireDe(jeu, langue) }, langue),
           contexte: `${L.carte} :\n${derniere ? textOf(derniere.analyse) : L.aucune}\n\n${L.echanges} :\n${echanges}`,
         });
@@ -439,7 +454,9 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
       if (!action && req.method === "DELETE") { conv.fermer(); return sendJson(res, 200, { ok: true }); }
       if (action === "jeton" && req.method === "POST") {
         try {
-          return sendJson(res, 200, { jeton: await tts.jetonTranscription(), termes: termesPourTranscription(glossaireDe(jeu, langue)).slice(0, 50) });
+          const jeton = await tts.jetonTranscription();
+          if (!ecoutes.has(arg)) ecoutes.set(arg, Date.now());
+          return sendJson(res, 200, { jeton, termes: termesPourTranscription(glossaireDe(jeu, langue)).slice(0, 50) });
         } catch (err) {
           return sendJson(res, 502, { erreur: errorMessageFor(statusOf(err), err?.body ? JSON.stringify(err.body) : "") });
         }
@@ -490,30 +507,14 @@ export function createHandler({ root, runClaude, runTask, tts = null, store = nu
       const groupe = findGroupe(jeu, p.groupe);
       const partie = findPartie(groupe, p.partie);
       const derniere = partie.cartes.at(-1);
-      const glossaire = listeGlossaire(jeu, langue);
-      const echanges = partie.discussion.slice(-8).map((m) => `${m.role === "joueur" ? L.joueur : L.aide} : ${m.texte}`).join("\n") || L.aucun;
-      const texte = `${L.jeu} : ${jeu.nom}
-
-${L.livret} :
-${livretPourQuestion(jeu.livret, langue)}
-
-${L.glossaire} :
-${glossaire}
-
-${L.carte} :
-${derniere ? textOf(derniere.analyse) : L.aucune}
-
-${L.echanges} :
-${echanges}
-
-${L.question} :
-${question}`;
+      const echanges = partie.discussion.slice(-8).map((m) => `${m.role === "joueur" ? L.joueur : L.aide} : ${m.texte}`).join("\n");
+      const { texte, prefixe } = texteQuestion({ jeu, glossaire: glossaireDe(jeu, langue), carte: derniere ? textOf(derniere.analyse) : "", echanges, question, langue });
       // ?flux=1 : la réponse part au fil de l'écriture, une ligne JSON par morceau (comme un chat d'IA).
       const flux = new URL(req.url, "http://localhost").searchParams.get("flux") === "1";
       const envoyer = (obj) => res.write(JSON.stringify(obj) + "\n");
       if (flux) res.writeHead(200, { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store", "X-Accel-Buffering": "no" });
       const r = await enqueue(() => runTask({
-        prefixe: texte.indexOf(`\n\n${L.glossaire} :`), // le livret, réutilisable d'une question à l'autre (mode API)
+        prefixe, onCout: compte("question"),
         content: [{ type: "text", text: texte }], system: rulesQuestionSystem({ vocal: p.vocal === true, langue }), model: p.modele || "claude-opus-5", effort: p.vocal === true ? "low" : "medium",
         onText: flux ? createFiltreReferences((morceau) => envoyer({ morceau })) : null,
       }));
@@ -532,6 +533,14 @@ ${question}`;
       return sendJson(res, 200, { reponse, ...extra });
     }
 
+    // « Réponse fausse ? » : la bonne réponse devient une question de test (npm run evaluer).
+    if (sub === "evaluations" && req.method === "POST") {
+      const p = await readJson(req);
+      const question = String(p.question || "").trim().slice(0, 2000), attendu = String(p.attendu || "").trim().slice(0, 500);
+      if (!evaluations || !question || !attendu) return sendJson(res, 400, { erreur: "Écris la bonne réponse." });
+      return sendJson(res, 200, { total: evaluations.ajouter(id, { question, attendu, langue, reponseFausse: String(p.reponse || "").slice(0, 4000), date: new Date().toISOString() }) });
+    }
+
     if (sub === "resume" && req.method === "POST") {
       const p = await readJson(req);
       const groupe = findGroupe(jeu, p.groupe);
@@ -540,7 +549,7 @@ ${question}`;
         return sendJson(res, 409, { erreur: "Pas de partie précédente à résumer pour ce groupe." });
       }
       const lus = precedente.cartes.map((c) => textOf(c.analyse)).join("\n\n").slice(-60_000);
-      const r = await enqueue(() => runTask({ content: [{ type: "text", text: `${L.lus}\n\n${lus}` }], system: summarySystem(langue), model: p.modele || "claude-opus-5", effort: "low" }));
+      const r = await enqueue(() => runTask({ content: [{ type: "text", text: `${L.lus}\n\n${lus}` }], system: summarySystem(langue), onCout: compte("resume"), model: p.modele || "claude-opus-5", effort: "low" }));
       if (!r.ok) return sendJson(res, 502, { erreur: r.erreur });
       await store.update(id, (j) => { findGroupe(j, groupe.id).parties.at(-1)[champ("resume", langue)] = r.text; return j; });
       return sendJson(res, 200, { texte: r.text });
@@ -574,6 +583,7 @@ ${question}`;
       if (url.pathname === "/api/voix" && req.method === "GET") return await voix(res);
       if (parts[0] === "api" && parts[1] === "ambiance" && req.method === "GET") return await ambiance(res, parts[2]);
       if (parts[0] === "api" && parts[1] === "jeux") return await jeux(req, res, parts.slice(2));
+      if (url.pathname === "/api/couts" && req.method === "GET") return sendJson(res, 200, { mode: claude, tarifVoix, soirees: couts?.lire() || [] });
       if (url.pathname === "/api/etat" && req.method === "GET") return sendJson(res, 200, { eleven: Boolean(tts), claude, connexion });
       if (req.method === "GET") return await fichier(res, url.pathname);
       res.writeHead(405).end();

@@ -77,5 +77,7 @@ export const jeuxApi = {
   questionFlux: (id, groupe, partie, question, modele, onMorceau) =>
     lireFlux(`api/jeux/${id}/question?flux=1`, { groupe, partie, question, modele }, onMorceau),
   question: (id, groupe, partie, question, modele) => api(`api/jeux/${id}/question`, { method: "POST", json: { groupe, partie, question, modele } }),
+  signaler: (id, cas) => api(`api/jeux/${id}/evaluations`, { method: "POST", json: cas }),
+  couts: () => api("api/couts"),
   resume: (id, groupe, modele) => api(`api/jeux/${id}/resume`, { method: "POST", json: { groupe, modele } }),
 };

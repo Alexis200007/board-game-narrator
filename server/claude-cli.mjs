@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ANALYSIS_SCHEMA, SYSTEM_PROMPT, analysisSystem, validateAnalysis } from "../js/claude.js";
 import { LABELS } from "./prompts-en.mjs";
+import { coutResultat } from "./couts.mjs";
 
 export const MODELE_PAR_DEFAUT = "claude-opus-5";
 export const MODELS = new Set([MODELE_PAR_DEFAUT, "claude-sonnet-5"]);
@@ -107,7 +108,7 @@ export function parseClaudeOutput(stdout, expect = "analysis") {
 }
 
 /** Lance une tâche `claude -p`. Ne lève jamais : rend { ok, data | text } ou { ok:false, erreur }. */
-export function runClaudeTask({ content, system, schema = null, model, effort = "low", expect = "text", command = "claude", timeoutMs = 180_000, onText = null }) {
+export function runClaudeTask({ content, system, schema = null, model, effort = "low", expect = "text", command = "claude", timeoutMs = 180_000, onText = null, onCout = () => {} }) {
   return new Promise((resolve) => {
     let out = "";
     let settled = false;
@@ -154,6 +155,8 @@ export function runClaudeTask({ content, system, schema = null, model, effort = 
     });
     child.on("close", () => {
       clearTimeout(timer);
+      const cout = out.split("\n").map(coutResultat).findLast((c) => c !== null);
+      if (cout !== undefined) onCout(cout);
       finish(parseClaudeOutput(out, expect));
     });
     child.stdin.on("error", () => {});

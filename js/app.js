@@ -1,4 +1,6 @@
 import { preparerDeconnexion } from "./acces.js";
+import { createEcran } from "./ecran.js";
+import { afficherCouts } from "./couts.js";
 import { loadSettings, saveSettings } from "./settings.js";
 import { t, tErreur, langue, enTeteLangue, traduirePage } from "./i18n.js";
 import { createCaster, defaultRoles, fallbackVoiceFor, castVoiceOptions } from "./voices.js";
@@ -30,6 +32,7 @@ let currentGame = null; // profil du jeu actif (glossaire, livret, parties), par
 let cropTarget = "carte"; // "carte" : traduire ; "livret" : ajouter une page au livret
 let narrationRun = 0;
 const ambiance = createAmbiance();
+const ecran = createEcran(); // reste allumé pendant une lecture, une attente ou une conversation
 // Groupe actif de ce téléphone pour le jeu en cours (le premier groupe par défaut).
 const currentGroupe = () => currentGame?.groupes.find((g) => g.id === settings.groupes?.[currentGame.id]) || currentGame?.groupes[0] || null;
 const currentPartie = () => currentGroupe()?.parties.at(-1) || null;
@@ -42,6 +45,7 @@ let caster = makeCaster();
 const player = createPlayer(audio, {
   fetchAudio: (i) => speakWithFallback(ttsText(analysis.segments[i]), segmentVoices[i]),
   onEtat(etat) {
+    ecran.garder("lecture", etat === "lecture");
     $("btn-pause").hidden = etat === "fini";
     $("btn-pause").textContent = etat === "pause" ? t("Reprendre") : t("Pause");
     $("btn-replay").textContent = etat === "fini" ? t("Réécouter") : t("Au début");
@@ -107,6 +111,7 @@ function show(view) {
   const change = vueActuelle !== view;
   if (change && vueActuelle === "aide") arreterAide();
   if (change && TABS.includes(vueActuelle)) defilement[vueActuelle] = window.scrollY;
+  ecran.garder("attente", view === "loading");
   const sens = vueActuelle ? sensVers(view) : 0;
   for (const v of VUES) $(`view-${v}`).hidden = v !== view;
   $("controls").hidden = view !== "result";
@@ -144,12 +149,13 @@ $("btn-retour").addEventListener("click", () => RETOURS[vueActuelle]?.());
 
 // Question dans l'app : rend true ou le texte saisi, null si on annule.
 let repondre = null;
-function demander({ titre, texte = "", oui, danger = false, champ = null }) {
+function demander({ titre, texte = "", oui, danger = false, champ = null, max = 60 }) {
   repondre?.(null);
   $("demande-titre").textContent = frenchSpacing(titre);
   $("demande-texte").textContent = frenchSpacing(texte);
   $("demande-texte").hidden = !texte;
   $("demande-bloc").hidden = champ === null;
+  $("demande-champ").maxLength = max;
   $("demande-champ").value = champ ?? "";
   $("demande-champ").setAttribute("aria-label", titre);
   $("demande-oui").textContent = oui;
@@ -441,6 +447,7 @@ function openSettings() {
   $("rate-out").textContent = fmtVitesse(Number(settings.rate));
   fillVoiceSelects();
   show("reglages");
+  afficherCouts($("couts"), jeuxApi.couts);
   if (voiceList.length === 0) refreshVoices();
 }
 function closeSettings() {
@@ -956,6 +963,7 @@ function arreterAide() {
   majBoutonsAide();
 }
 function majBoutonsAide() {
+  ecran.garder("aide", aideLue !== null);
   [...$("aide-sections").querySelectorAll(".aide-ecouter")].forEach((b, i) => { b.textContent = i !== aideLue ? t("Écouter") : aideParle ? t("Arrêter") : t("Un instant…"); });
 }
 async function lireAide(i, section) {
@@ -1114,7 +1122,18 @@ function msgJoueur(texte) {
   chat().append(li);
   return li;
 }
-function msgAide(texte = "", refs = []) {
+/** « Réponse fausse ? » : la bonne réponse sert de test pour vérifier l'app. */
+function boutonFaux(question, reponse) {
+  const g = currentGame;
+  const b = Object.assign(document.createElement("button"), { type: "button", className: "faux", textContent: frenchSpacing(t("Réponse fausse ?")) });
+  b.addEventListener("click", async () => {
+    const attendu = await demander({ titre: t("Quelle est la bonne réponse ?"), texte: t("Elle servira à tester l'app. Elle ne change pas les prochaines réponses."), oui: t("Enregistrer"), champ: "", max: 500 });
+    if (!attendu) return;
+    try { await jeuxApi.signaler(g.id, { question, reponse, attendu }); b.remove(); avis(t("Merci, c'est noté")); } catch (err) { showError(err.message, false); }
+  });
+  return b;
+}
+function msgAide(texte = "", refs = [], question = "") {
   const li = Object.assign(document.createElement("li"), { className: "msg aide" });
   const sig = Object.assign(document.createElement("div"), { className: "signature" });
   sig.innerHTML = `<span class="avatar">${ICONE_LIVRE}</span>`;
@@ -1122,6 +1141,7 @@ function msgAide(texte = "", refs = []) {
   const corps = Object.assign(document.createElement("div"), { className: "texte", textContent: frenchSpacing(texte) });
   li.append(sig, corps);
   if (refs.length) li.append(blocPages(refs));
+  if (question) li.append(boutonFaux(question, texte));
   chat().append(li);
   return li;
 }
@@ -1165,7 +1185,11 @@ function openRegles() {
   hideError();
   chat().replaceChildren();
   const discussion = currentPartie().discussion;
-  for (const m of discussion) m.role === "joueur" ? msgJoueur(m.texte) : msgAide(m.texte, m.refs);
+  let question = "";
+  for (const m of discussion) {
+    if (m.role === "joueur") msgJoueur(question = m.texte);
+    else msgAide(m.texte, m.refs, question);
+  }
   if (!discussion.length) accueilChat();
   show("regles");
   versLeBas();
@@ -1221,9 +1245,9 @@ async function envoyerQuestion(question, { flux = null, onTexte = () => {}, onRe
     flot.finir().then(() => {
       rep.classList.remove("ecrit");
       corps.textContent = frenchSpacing(reponse);
-      if (!refs.length) return;
       const suivre = presDuBas();
-      rep.append(blocPages(refs));
+      if (refs.length) rep.append(blocPages(refs));
+      if (reponse) rep.append(boutonFaux(question, reponse));
       if (suivre && !$("view-regles").hidden) versLeBas(true);
     });
     refreshGame();
@@ -1257,6 +1281,7 @@ let direct = null; // conversation ouverte
 
 function setVocal(etat, message = "") {
   vocalEtat = etat;
+  ecran.garder("vocal", etat !== "repos");
   $("vocal-rond").dataset.etat = etat;
   $("vocal-rond").style.setProperty("--niveau", 0);
   $("vocal-rond").setAttribute("aria-label", { ecoute: t("Envoyer"), reflexion: t("Annuler"), parole: t("Couper la réponse") }[etat] || t("Parler"));
@@ -1268,6 +1293,7 @@ const niveauRond = (n, gain) => $("vocal-rond").style.setProperty("--niveau", Ma
 function fermerDirect() {
   const d = direct;
   direct = null;
+  ecran.garder("vocal", false);
   if (!d) return;
   clearInterval(d.horloge);
   clearTimeout(d.attente);

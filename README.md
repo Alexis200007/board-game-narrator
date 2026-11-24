@@ -19,6 +19,7 @@ It is a web app made for the phone. It runs on your own computer or [server](doc
 - **Rules help:** chat answers based on the rulebook you add (PDF or photos), with a picture of the page and the passage highlighted.
 - **Voice chat:** real-time conversation you can interrupt by speaking.
 - **My turn:** a one-page quick reference drawn from the rulebook.
+- **Costs:** Settings shows what cards, questions and voices used, evening by evening.
 - **History and "Previously…":** replay past cards, or hear a recap of the last session.
 
 ## Requirements
@@ -77,6 +78,16 @@ No Tailscale or home computer needed: with Docker, a domain name and a shared pa
 ```
 npm test
 ```
+
+To check rules answers against the real Claude (two requests per question, on your plan or key):
+
+```
+npm run evaluer -- --demo
+```
+
+Use a game's id instead of `--demo` to test your own game. Questions come from "Wrong answer?" under an answer and are kept in `data/evaluations`.
+
+What's next: [ROADMAP.md](ROADMAP.md)
 
 No build step: plain ES modules in `js/` (page) and `server/` (Node). Code and comments are in French; English texts are in `js/en.js`, keyed by the French text, and English instructions for Claude are in `server/prompts-en.mjs` and `js/claude.js`.
 
