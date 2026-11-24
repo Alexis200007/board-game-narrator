@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Narrateur">
+  <meta name="theme-color" content="#1d3b33">
+  <title>Narrateur de jeux</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <button id="btn-retour" class="icon-btn" aria-label="Retour" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5 7.5 12l7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <h1 id="titre-vue" hidden></h1>
+    <button id="btn-jeu" class="title-btn" aria-label="Changer de jeu">
+      <span id="titre-jeu">Narrateur</span>
+      <svg class="caret" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button id="btn-settings" class="icon-btn" aria-label="Réglages">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Zm8.2 4.7-1.6.9a6.9 6.9 0 0 1-.7 1.7l.5 1.8-1.7 1.7-1.8-.5a6.9 6.9 0 0 1-1.7.7l-.9 1.6h-2.4l-.9-1.6a6.9 6.9 0 0 1-1.7-.7l-1.8.5-1.7-1.7.5-1.8a6.9 6.9 0 0 1-.7-1.7l-1.6-.9v-2.4l1.6-.9c.2-.6.4-1.2.7-1.7l-.5-1.8 1.7-1.7 1.8.5c.5-.3 1.1-.5 1.7-.7l.9-1.6h2.4l.9 1.6c.6.2 1.2.4 1.7.7l1.8-.5 1.7 1.7-.5 1.8c.3.5.5 1.1.7 1.7l1.6.9Z"/></svg>
+    </button>
+  </header>
+  <div id="groupe-bar" class="groupe-bar" hidden>
+    <button id="btn-groupe" class="groupe-btn" aria-haspopup="dialog">
+      <svg class="gens" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.4"/><path d="M2.8 19.5c.4-3.4 2.9-5.4 6.2-5.4s5.8 2 6.2 5.4M15.8 5.4a3.3 3.3 0 0 1 0 6.2M18 14.6c1.9.7 3 2.4 3.2 4.9"/></g></svg>
+      <span id="titre-groupe"></span>
+      <svg class="caret" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button id="btn-aide" class="groupe-btn aide-btn">
+      <svg class="gens" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5 5.5 8 8 5M4 12.5 5.5 14 8 11M4 18.5 5.5 20 8 17M11.5 6.5H20M11.5 12.5H20M11.5 18.5H20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Mon tour</span>
+    </button>
+  </div>
+
+  <main>
+    <div id="error" class="error" role="alert" hidden>
+      <p id="error-text"></p>
+      <button id="btn-error-fermer" class="remove" aria-label="Fermer le message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <button id="btn-retry" class="btn">Réessayer</button>
+    </div>
+
+    <section id="view-home">
+      <button id="btn-precedemment" class="recap" hidden>
+        <strong>Précédemment…</strong>
+        <span>Écouter le résumé de la partie précédente</span>
+      </button>
+      <label class="capture">
+        <input id="photo-input" type="file" accept="image/*" capture="environment" hidden>
+        <span class="lens" aria-hidden="true"></span>
+        <strong>Photographier une carte</strong>
+      </label>
+      <p class="home-hint">Carte, règle ou passage d'histoire : je le traduis et je le lis à voix haute.</p>
+      <label class="library-link">
+        <input id="photo-input-library" type="file" accept="image/*" hidden>
+        Choisir une photo existante
+      </label>
+    </section>
+
+    <section id="view-jeu" hidden>
+      <h2 id="jeu-titre" class="cache-visuel">Le jeu</h2>
+      <article class="sheet panel">
+        <h3 id="parties-titre">Parties</h3>
+        <ol id="jeu-parties" class="plain-list"></ol>
+        <button id="btn-nouvelle-partie" class="btn btn-fort">Commencer une nouvelle partie</button>
+      </article>
+      <article class="sheet panel">
+        <h3>Groupes</h3>
+        <p class="hint">Chaque groupe a ses parties, son historique et les voix de ses personnages. Le livret et le glossaire sont partagés.</p>
+        <ol id="jeu-groupes" class="plain-list"></ol>
+        <form id="groupe-form" class="add-row">
+          <input id="groupe-nom" type="text" maxlength="60" placeholder="Nouveau groupe" aria-label="Nom du nouveau groupe" autocomplete="off">
+          <button class="btn btn-ink">Créer</button>
+        </form>
+      </article>
+      <article class="sheet panel">
+        <h3>Livret de règles</h3>
+        <p class="hint">Ajoute le livret une fois, en PDF (même gros) ou en photos des pages : l'aide aux règles s'en sert pour répondre.</p>
+        <ol id="jeu-travaux" class="plain-list"></ol>
+        <ol id="jeu-images" class="plain-list"></ol>
+        <ol id="jeu-livret" class="plain-list"></ol>
+        <div class="row">
+          <label class="btn btn-ink"><input id="livret-photo" type="file" accept="image/*" capture="environment" hidden>Photographier une page</label>
+          <label class="btn btn-ink"><input id="livret-pdf" type="file" accept="application/pdf" hidden>Ajouter un PDF</label>
+        </div>
+      </article>
+      <article class="sheet panel">
+        <h3>Glossaire</h3>
+        <p class="hint">Les traductions retenues pour ce jeu. Claude les réutilise à chaque carte.</p>
+        <ol id="jeu-glossaire" class="glossary"></ol>
+      </article>
+    </section>
+
+    <section id="view-reglages" hidden>
+
+      <h3 class="groupe-titre">Langue</h3>
+      <div class="sheet reglages">
+        <label class="ligne choix">
+          <span class="libelle">Langue de l'app<small>Les cartes sont traduites et lues dans cette langue.</small></span>
+          <select id="set-langue">
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+      </div>
+
+      <h3 class="groupe-titre">Narration</h3>
+      <div class="sheet reglages">
+        <label class="ligne">
+          <span class="libelle">Vitesse de la voix</span>
+          <output id="rate-out" class="valeur">1,00×</output>
+          <input id="set-rate" type="range" min="0.8" max="1.3" step="0.05" value="1">
+        </label>
+        <label class="ligne bascule">
+          <span class="libelle">Ambiance sonore<small>Un fond sonore doux sous la voix</small></span>
+          <input id="set-ambiance" type="checkbox" role="switch">
+        </label>
+      </div>
+
+      <h3 class="groupe-titre">Voix</h3>
+      <div class="sheet reglages">
+        <label class="ligne choix"><span class="libelle">Narrateur</span><select id="voice-narrateur"></select></label>
+        <label class="ligne choix"><span class="libelle">Règles</span><select id="voice-regle"></select></label>
+        <label class="ligne choix"><span class="libelle">Créatures et inconnus</span><select id="voice-creature"></select></label>
+        <p id="voices-status" class="note">Chargement des voix…</p>
+      </div>
+      <button type="button" id="btn-new-game" class="action-ligne">Oublier les voix des personnages du groupe</button>
+
+      <h3 class="groupe-titre">Traduction</h3>
+      <div class="sheet reglages">
+        <label class="ligne choix">
+          <span class="libelle">Modèle Claude</span>
+          <select id="set-model">
+            <option value="claude-opus-5">Opus 5, la meilleure traduction</option>
+            <option value="claude-sonnet-5">Sonnet 5, plus rapide</option>
+          </select>
+        </label>
+      </div>
+      <p class="pied">La traduction passe par Claude sur ton ordinateur. Aucune clé n'est gardée sur ce téléphone. Les réglages s'enregistrent tout seuls.</p>
+    </section>
+
+    <section id="view-aide" hidden>
+      <p id="aide-etat" class="aide-etat" role="status"></p>
+      <button id="btn-aide-preparer" class="btn btn-primary aide-action" hidden></button>
+      <div id="aide-sections"></div>
+      <p id="aide-pied" class="pied" hidden>Préparé à partir du livret. En cas de doute, demande dans Règles ou vérifie le livret.</p>
+    </section>
+
+    <section id="view-historique" hidden>
+      <h2 class="cache-visuel">Historique</h2>
+      <div id="historique"></div>
+    </section>
+
+    <section id="view-regles" hidden>
+      <ol id="chat" class="chat" aria-live="polite"></ol>
+    </section>
+
+    <section id="view-crop" hidden>
+      <p class="crop-hint">Ajuste le cadre autour du texte à lire.</p>
+      <div id="crop-stage" class="crop-stage">
+        <img id="crop-img" alt="Photo à traduire">
+        <div id="crop-frame" class="crop-frame">
+          <span class="handle" data-h="nw"></span><span class="handle" data-h="ne"></span>
+          <span class="handle" data-h="sw"></span><span class="handle" data-h="se"></span>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-loading" hidden>
+      <div class="die" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      <p id="loading-text" role="status">Lecture de la carte</p>
+      <button id="btn-annuler" class="text-btn" hidden>Annuler</button>
+    </section>
+
+    <section id="view-result" hidden>
+      <article class="sheet">
+        <ol id="segments" class="script"></ol>
+        <pre id="original" class="original" hidden></pre>
+        <div class="sheet-foot">
+          <button id="btn-toggle-original" class="text-btn">Voir le texte anglais</button>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <nav id="controls" class="controls" hidden>
+    <button id="btn-pause" class="btn">Pause</button>
+    <button id="btn-replay" class="btn">Réécouter</button>
+    <label class="btn btn-primary">
+      <input id="photo-input-2" type="file" accept="image/*" capture="environment" hidden>
+      Carte suivante
+    </label>
+  </nav>
+
+  <nav id="crop-controls" class="controls" hidden>
+    <label class="btn">
+      <input id="photo-input-3" type="file" accept="image/*" capture="environment" hidden>
+      Reprendre
+    </label>
+    <button id="btn-crop-all" class="btn">Photo entière</button>
+    <button id="btn-crop-ok" class="btn btn-primary">Traduire</button>
+  </nav>
+
+  <nav id="tabbar" class="tabbar" aria-label="Navigation">
+    <span class="tab-jeton" aria-hidden="true"></span>
+    <button class="tab" data-tab="home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8.5 17h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <span>Lire</span>
+    </button>
+    <button class="tab" data-tab="regles">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5Zm0 0v13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      <span>Règles</span>
+    </button>
+    <button class="tab" data-tab="historique">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="7" width="12" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 4.5h8M10 2.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <span>Historique</span>
+    </button>
+    <button class="tab" data-tab="jeu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3.2 3.2 0 0 1 1.8 5.8l3.6 2.2c1.3.8 1 2-.4 2h-1.6l2.6 6.5H6l2.6-6.5H7c-1.4 0-1.7-1.2-.4-2l3.6-2.2A3.2 3.2 0 0 1 12 3Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      <span>Le jeu</span>
+    </button>
+  </nav>
+
+  <form id="chat-form" class="chat-form" hidden>
+    <div class="composer">
+      <textarea id="chat-input" rows="1" placeholder="Une question sur les règles…" enterkeyhint="send" aria-label="Ta question"></textarea>
+      <button type="button" id="chat-micro" class="micro" aria-label="Parler à l'assistant">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button id="chat-send" class="send" aria-label="Envoyer" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </form>
+
+  <dialog id="vocal" class="vocal" aria-label="Assistant vocal">
+    <div class="vocal-texte" id="vocal-texte">
+      <p id="vocal-question" class="vocal-question"></p>
+      <p id="vocal-reponse" class="vocal-reponse"></p>
+      <div id="vocal-refs"></div>
+    </div>
+    <button type="button" id="vocal-rond" class="vocal-rond" data-etat="repos" autofocus>
+      <span class="halo"></span>
+      <svg class="stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor"/></svg>
+      <svg class="mic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <p id="vocal-etat" class="vocal-etat" role="status"></p>
+    <p id="vocal-aide" class="vocal-aide"></p>
+    <div class="vocal-actions">
+      <button type="button" id="vocal-muet" class="vocal-fin" aria-pressed="false">Couper le micro</button>
+      <button type="button" id="vocal-fin" class="vocal-fin">Terminer</button>
+    </div>
+  </dialog>
+
+  <dialog id="page-dialog" class="page-dialog" aria-labelledby="page-titre">
+    <header class="page-tete">
+      <strong id="page-titre"></strong>
+      <button type="button" id="page-fermer" class="vocal-fin" autofocus>Fermer</button>
+    </header>
+    <div id="page-defile" class="page-defile"><div id="page-feuille" class="page-feuille"></div></div>
+  </dialog>
+
+  <dialog id="groupes-dialog">
+    <h2 tabindex="-1" autofocus>Quel groupe ?</h2>
+    <p id="groupes-jeu" class="hint"></p>
+    <ol id="groupes-list" class="plain-list games"></ol>
+    <form id="groupes-form">
+      <label class="field">Nouveau groupe
+        <input id="groupes-nom" type="text" maxlength="60" placeholder="Ex. Les cousins" autocomplete="off">
+      </label>
+      <p id="groupes-erreur" class="groupes-erreur" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" id="btn-groupes-fermer" class="btn">Fermer</button>
+        <button class="btn btn-primary">Créer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="jeux-dialog">
+    <form method="dialog">
+      <h2 tabindex="-1" autofocus>Quel jeu ?</h2>
+      <ol id="jeux-list" class="plain-list games"></ol>
+      <label class="field">Nouveau jeu
+        <input id="jeu-nom" type="text" maxlength="80" placeholder="Ex. Gloomhaven" autocomplete="off">
+      </label>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn">Fermer</button>
+        <button type="button" id="btn-creer-jeu" class="btn btn-primary">Créer</button>
+      </div>
+    </form>
+  </dialog>
+
+
+  <dialog id="demande" aria-labelledby="demande-titre">
+    <form id="demande-form">
+      <h2 id="demande-titre" tabindex="-1"></h2>
+      <p id="demande-texte" class="demande-texte"></p>
+      <div id="demande-bloc" class="field"><input id="demande-champ" type="text" maxlength="60" autocomplete="off"></div>
+      <div class="dialog-actions">
+        <button type="button" id="demande-non" class="btn">Annuler</button>
+        <button id="demande-oui" class="btn btn-primary"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="avis" class="avis" role="status"></div>
+
+  <audio id="audio" playsinline preload="auto"></audio>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

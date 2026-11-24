@@ -1,0 +1,20 @@
+{
+  "name": "board-game-narrator",
+  "description": "Photograph, translate and narrate board game cards",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "start": "node --env-file=.env.local server.mjs"
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.79.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.5.438",
+    "@napi-rs/canvas": "^1.2.0"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+.env*
+!.env.example
+logs/
+data/
+.claude/
+.superpowers/
+docs/superpowers/
+extraits-voix/
