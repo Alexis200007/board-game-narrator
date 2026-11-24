@@ -51,6 +51,8 @@ const player = createPlayer(audio, {
   onState(i, state, err) {
     const li = $("segments").children[i];
     if (!li) return;
+    // Un seul passage en cours : celui qu'on quitte en touchant un autre s'éteint.
+    if (state === "chargement") for (const x of $("segments").children) x.classList.remove("chargement", "lecture");
     li.classList.remove("chargement", "lecture", "fini", "erreur");
     li.classList.add(state);
     if (state === "lecture") li.scrollIntoView({ behavior: "smooth", block: "center" });

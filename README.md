@@ -4,6 +4,10 @@
 
 Take a photo of a card, rule or story passage from a board game. The app translates it and reads it aloud, with a different voice for each character. It also answers rules questions from the game's own rulebook, in writing or in a live voice conversation.
 
+| Photograph a card | Listen to it | Ask about the rules | See what to do |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/images/home.jpg" width="200" alt="Home screen with a large card to photograph"> | <img src="docs/images/reading.jpg" width="200" alt="Translated card, with the line being read highlighted"> | <img src="docs/images/rules.jpg" width="200" alt="Rules answer with the rulebook page and the passage highlighted"> | <img src="docs/images/my-turn.jpg" width="200" alt="Quick reference of the turn and actions"> |
+
 The interface, translations and voices are available in **English** and **French** (Settings → Language). Cards can be in any language.
 
 It is a web app made for the phone. It runs on your own computer or [server](docs/DEPLOY.md): Claude reads and translates, through [Claude Code](https://claude.com/claude-code) (your Claude plan) or the Anthropic API (your key), and [ElevenLabs](https://elevenlabs.io) provides the voices.

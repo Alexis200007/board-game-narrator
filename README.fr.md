@@ -4,6 +4,10 @@
 
 Prends en photo une carte, une règle ou un passage d'histoire d'un jeu. L'app le traduit (en français ou en anglais, au choix dans les réglages) et le lit à voix haute, avec une voix différente pour chaque personnage.
 
+| Photographier une carte | L'écouter | Poser une question | Savoir quoi faire |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/images/home.jpg" width="200" alt="Écran d'accueil avec une grande carte à photographier"> | <img src="docs/images/reading.jpg" width="200" alt="Carte traduite, passage lu surligné"> | <img src="docs/images/rules.jpg" width="200" alt="Réponse avec la page du livret et le passage surligné"> | <img src="docs/images/my-turn.jpg" width="200" alt="Aide-mémoire du tour et des actions"> |
+
 L'app tourne sur ton ordinateur et tu l'ouvres sur l'iPhone par Tailscale. La traduction passe par ton abonnement Claude (`claude -p`) ou par l'API Anthropic et les voix par ElevenLabs (modèle v4, voix francophones natives ; voix « premade » en secours).
 
 ## Ce que fait l'app

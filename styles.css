@@ -703,3 +703,8 @@ body.has-chat .avis { bottom: calc(var(--tabbar-h) + var(--safe-b) + 84px); }
   .home-hint { margin-top: 26px; font-size: 17px; }
   .library-link { margin-top: 12px; }
 }
+
+/* Titres : le bas des lettres (g, p) n'est pas coupé */
+.topbar h1, .title-btn span { line-height: 1.35; }
+.capture strong { text-wrap: balance; }
+.aide-action { max-width: none; padding: 0 18px; white-space: normal; }
